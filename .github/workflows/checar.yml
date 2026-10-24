@@ -1,0 +1,30 @@
+name: Checar Instagram
+
+on:
+  schedule:
+    - cron: "*/15 * * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  checar:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install feedparser
+      - run: python checar.py
+        env:
+          DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}
+          FEED_URL: ${{ secrets.FEED_URL }}
+          NOME_PERFIL: ${{ secrets.NOME_PERFIL }}
+      - name: Salvar posts já enviados
+        run: |
+          git config user.name "github-actions"
+          git config user.email "github-actions@users.noreply.github.com"
+          git add vistos.json
+          git diff --staged --quiet || (git commit -m "atualiza vistos" && git push)
